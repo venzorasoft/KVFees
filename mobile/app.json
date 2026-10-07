@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "KV Fee Helper",
+    "slug": "kv-fee-helper",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "plugins": [
+      "expo-secure-store",
+      "expo-local-authentication",
+      "expo-notifications",
+      "expo-asset",
+      "expo-font",
+      "expo-status-bar"
+    ],
+    "extra": {
+      "apiUrl": "http://192.168.29.107:8765"
+    },
+    "ios": {
+      "bundleIdentifier": "app.kvfeehelper",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "Unlock to auto-fill your child's fee details."
+      }
+    },
+    "android": {
+      "package": "app.kvfeehelper"
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}

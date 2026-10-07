@@ -1,0 +1,30 @@
+# Containerised stack: SQL Server 2022 + the API (http://localhost:8000/docs).
+#   set MSSQL_SA_PASSWORD (8+ chars, upper/lower/digit/symbol) and DATA_ENCRYPTION_KEY, then:
+#   docker compose up --build
+# (The API creates the KVFees database and runs migrations on start.)
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?set MSSQL_SA_PASSWORD}
+    volumes: [ db-data:/var/opt/mssql ]
+    ports: [ "1433:1433" ]
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      retries: 10
+
+  api:
+    build: ./backend
+    environment:
+      ENVIRONMENT: development
+      DATABASE_URL: mssql+pyodbc://sa:${MSSQL_SA_PASSWORD}@db/KVFees?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes
+      JWT_SECRET: local-dev-secret-change-me-please
+      INDEX_HMAC_KEY: local-dev-index-key-change-me
+      DATA_ENCRYPTION_KEY: ${DATA_ENCRYPTION_KEY:?generate a Fernet key, see backend/.env.example}
+    ports: [ "8000:8000" ]
+    depends_on: { db: { condition: service_healthy } }
+
+volumes:
+  db-data:
