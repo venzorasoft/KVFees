@@ -2,7 +2,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { CountUp, FadeInUp, GrowBar } from '../anim';
 import { Child, Payment, listChildren, listPayments } from '../api';
+import { CampusScene } from '../art';
 import { colors } from '../theme';
 import { Card, GradientHeader, IconCircle } from '../ui';
 
@@ -46,10 +48,44 @@ export default function HistoryScreen() {
     return out;
   }, [rows, children, q]);
 
+  // Totals of successful payments for each of the last 6 calendar months (oldest first).
+  const months = useMemo(() => {
+    const now = new Date();
+    const out = Array.from({ length: 6 }, (_, i) => {
+      const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
+      return { key: `${d.getFullYear()}-${d.getMonth()}`, label: d.toLocaleDateString(undefined, { month: 'short' }), total: 0 };
+    });
+    for (const p of rows) {
+      if (p.status !== 'success') continue;
+      const d = new Date(p.timestamp);
+      const m = out.find((x) => x.key === `${d.getFullYear()}-${d.getMonth()}`);
+      if (m) m.total += Math.round(Number(p.amount));
+    }
+    return out;
+  }, [rows]);
+  const maxMonth = Math.max(1, ...months.map((m) => m.total));
+
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
-      <GradientHeader title="Payment History" />
+      <GradientHeader title="Payment History" bottom={64} art={<CampusScene height={80} />} />
       <ScrollView style={s.sheet} contentContainerStyle={{ paddingBottom: 24 }}>
+        <FadeInUp>
+          <Card style={{ marginBottom: 12 }}>
+            <View style={s.chartHead}>
+              <Text style={s.chartTitle}>Fees paid · last 6 months</Text>
+              <CountUp to={months.reduce((n, m) => n + m.total, 0)} prefix="₹" style={s.chartTotal} />
+            </View>
+            <View style={s.bars}>
+              {months.map((m, i) => (
+                <View key={m.key} style={s.barCol}>
+                  <Text style={s.barVal}>{m.total ? `₹${m.total >= 1000 ? Math.round(m.total / 100) / 10 + 'k' : m.total}` : ''}</Text>
+                  <GrowBar ratio={m.total / maxMonth} max={92} delay={i * 90} color={i === months.length - 1 ? colors.primary : colors.accent} />
+                  <Text style={s.barLabel}>{m.label}</Text>
+                </View>
+              ))}
+            </View>
+          </Card>
+        </FadeInUp>
         <View style={s.search}>
           <Ionicons name="search" size={18} color={colors.muted} />
           <TextInput style={s.searchInput} placeholder="Search" placeholderTextColor={colors.muted} value={q} onChangeText={setQ} />
@@ -91,6 +127,13 @@ const s = StyleSheet.create({
   sheet: { marginTop: -36, paddingHorizontal: 16 },
   search: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#fff', borderRadius: 14, paddingHorizontal: 14, height: 48, marginBottom: 8 },
   searchInput: { flex: 1, fontSize: 15, color: colors.text, outlineStyle: 'none' } as any,
+  chartHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  chartTitle: { fontSize: 14, fontWeight: '700', color: colors.text },
+  chartTotal: { fontSize: 16, fontWeight: '800', color: colors.primary },
+  bars: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', height: 140 },
+  barCol: { alignItems: 'center', justifyContent: 'flex-end', gap: 4, flex: 1 },
+  barVal: { fontSize: 10, color: colors.muted, height: 14 },
+  barLabel: { fontSize: 11, color: colors.muted, marginTop: 2 },
   day: { fontSize: 12, fontWeight: '600', color: colors.muted, marginTop: 16, marginBottom: 8, marginLeft: 4 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },
   line: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.line },

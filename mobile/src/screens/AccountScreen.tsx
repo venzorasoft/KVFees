@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useCallback, useState } from 'react';
@@ -56,7 +57,8 @@ export default function AccountScreen() {
         <Card>
           <Text style={s.section}>Children</Text>
           {children.map((c) => (
-            <Row key={c.id} icon="school-outline" title={c.alias_name} subtitle={`ID ••••${c.unique_id.slice(-3)}`} onPress={() => nav.navigate('Pay', { child: c })} />
+            <Row key={c.id} icon="school-outline" title={c.alias_name} subtitle={`ID ••••${c.unique_id.slice(-3)}`} onPress={() => nav.navigate('AddChild', { child: c })}
+              right={<Ionicons name="create-outline" size={18} color={colors.primary} />} />
           ))}
           <Row icon="add-circle-outline" title="Add a child" onPress={() => nav.navigate('AddChild')} last />
         </Card>
@@ -75,7 +77,7 @@ export default function AccountScreen() {
 
 const s = StyleSheet.create({
   name: { color: '#fff', fontSize: 18, fontWeight: '700', marginTop: 10 },
-  contact: { color: '#DCE7FF', fontSize: 13, marginTop: 2 },
+  contact: { color: colors.onHeader, fontSize: 13, marginTop: 2 },
   sheet: { marginTop: -28, paddingHorizontal: 16 },
   section: { fontSize: 15, fontWeight: '700', color: colors.text, marginBottom: 8 },
   input: { flex: 1, fontSize: 16, color: colors.text, outlineStyle: 'none' } as any,

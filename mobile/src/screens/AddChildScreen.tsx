@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput } from 'react-native';
 import type { RootStack } from '../../App';
 import { Alert } from '../alert';
-import { addChild } from '../api';
+import { addChild, deleteChild, updateChild } from '../api';
 import { colors } from '../theme';
 import { Button, Card, Field } from '../ui';
 
@@ -12,11 +12,13 @@ const toIso = (dmy: string) => {
   const m = dmy.trim().match(/^(\d{2})[/-](\d{2})[/-](\d{4})$/);
   return m ? `${m[3]}-${m[2]}-${m[1]}` : null;
 };
+const toDmy = (iso: string) => iso.split('-').reverse().join('/');
 
-export default function AddChildScreen({ navigation }: NativeStackScreenProps<RootStack, 'AddChild'>) {
-  const [alias, setAlias] = useState('');
-  const [uid, setUid] = useState('');
-  const [dob, setDob] = useState('');
+export default function AddChildScreen({ navigation, route }: NativeStackScreenProps<RootStack, 'AddChild'>) {
+  const editing = route.params?.child;
+  const [alias, setAlias] = useState(editing?.alias_name ?? '');
+  const [uid, setUid] = useState(editing?.unique_id ?? '');
+  const [dob, setDob] = useState(editing ? toDmy(editing.dob) : '');
   const [busy, setBusy] = useState(false);
 
   const save = async () => {
@@ -24,13 +26,21 @@ export default function AddChildScreen({ navigation }: NativeStackScreenProps<Ro
     if (!iso) return Alert.alert('Date of birth must be DD/MM/YYYY');
     setBusy(true);
     try {
-      await addChild({ alias_name: alias.trim(), unique_id: uid.trim(), dob: iso });
+      const body = { alias_name: alias.trim(), unique_id: uid.trim(), dob: iso };
+      if (editing) await updateChild(editing.id, body);
+      else await addChild(body);
       navigation.goBack();
     } catch (e: any) {
       Alert.alert('Failed', e?.response?.data?.detail?.toString?.() ?? 'Could not save');
       setBusy(false);
     }
   };
+
+  const remove = () =>
+    Alert.alert('Delete', `Remove ${editing?.alias_name}?`, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete', style: 'destructive', onPress: () => deleteChild(editing!.id).then(() => navigation.goBack()) },
+    ]);
 
   return (
     <ScrollView contentContainerStyle={s.c} keyboardShouldPersistTaps="handled">
@@ -45,7 +55,8 @@ export default function AddChildScreen({ navigation }: NativeStackScreenProps<Ro
         <Field icon="calendar-outline">
           <TextInput style={s.input} placeholder="Date of birth (DD/MM/YYYY)" placeholderTextColor={colors.muted} keyboardType="numbers-and-punctuation" maxLength={10} value={dob} onChangeText={setDob} />
         </Field>
-        <Button title="Save child" onPress={save} disabled={busy || !alias.trim() || !uid.trim() || dob.length < 10} />
+        <Button title={editing ? 'Save changes' : 'Save child'} onPress={save} disabled={busy || !alias.trim() || !uid.trim() || dob.length < 10} />
+        {editing && <Button title="Delete child" variant="danger" icon="trash-outline" onPress={remove} />}
       </Card>
     </ScrollView>
   );

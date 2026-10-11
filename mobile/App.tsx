@@ -18,7 +18,7 @@ import { colors } from './src/theme';
 export type RootStack = {
   Login: undefined;
   Main: undefined;
-  AddChild: undefined;
+  AddChild: { child?: Child } | undefined; // child set = edit mode
   Pay: { child: Child };
 };
 
@@ -69,7 +69,7 @@ export default function App() {
         <Stack.Navigator screenOptions={{ headerShadowVisible: false, headerStyle: { backgroundColor: colors.bg }, headerTitleAlign: 'center' }}>
           <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Main" component={MainTabs} options={{ headerShown: false }} />
-          <Stack.Screen name="AddChild" component={AddChildScreen} options={{ title: 'Add Child' }} />
+          <Stack.Screen name="AddChild" component={AddChildScreen} options={({ route }) => ({ title: route.params?.child ? 'Edit Child' : 'Add Child' })} />
           <Stack.Screen name="Pay" component={PayScreen} options={({ route }) => ({ title: route.params.child.alias_name })} />
         </Stack.Navigator>
       </NavigationContainer>

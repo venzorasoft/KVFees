@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ReactNode } from 'react';
-import { Pressable, StyleProp, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { Image, Pressable, StyleProp, StyleSheet, Text, View, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { PressScale } from './anim';
 import { colors, radius, shadow } from './theme';
 
 export type IconName = keyof typeof Ionicons.glyphMap;
@@ -13,6 +14,15 @@ export function IconCircle({ name, size = 44, tint = colors.primary, bg = colors
   return (
     <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: bg, alignItems: 'center', justifyContent: 'center' }}>
       <Ionicons name={name} size={size * 0.46} color={tint} />
+    </View>
+  );
+}
+
+/** Kendriya Vidyalaya emblem on a white rounded badge (asset: assets/kv-logo.png). */
+export function KVLogo({ size = 64 }: { size?: number }) {
+  return (
+    <View style={{ width: size, height: size, borderRadius: size * 0.28, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', ...shadow }}>
+      <Image source={require('../assets/kv-logo.png')} style={{ width: size * 0.78, height: size * 0.78 }} resizeMode="contain" />
     </View>
   );
 }
@@ -33,7 +43,7 @@ export function Button({ title, onPress, disabled, variant = 'primary', icon }: 
   title: string; onPress: () => void; disabled?: boolean; variant?: 'primary' | 'ghost' | 'danger'; icon?: IconName;
 }) {
   const fg = variant === 'primary' ? '#fff' : variant === 'danger' ? colors.red : colors.primary;
-  const bg = variant === 'primary' ? colors.primary : variant === 'danger' ? '#FEECEB' : colors.primarySoft;
+  const bg = variant === 'primary' ? colors.primary : variant === 'danger' ? '#F1E2DD' : colors.primarySoft;
   return (
     <Pressable onPress={onPress} disabled={disabled} style={({ pressed }) => [s.btn, { backgroundColor: bg, opacity: disabled ? 0.5 : pressed ? 0.85 : 1 }]}>
       {icon && <Ionicons name={icon} size={18} color={fg} />}
@@ -58,10 +68,13 @@ export function Row({ icon, title, subtitle, onPress, right, last }: {
 }
 
 /** Blue gradient header with a centred title, like the Savings screen in the reference. */
-export function GradientHeader({ title, children, height }: { title?: string; children?: ReactNode; height?: number }) {
+export function GradientHeader({ title, children, height, art, bottom }: {
+  title?: string; children?: ReactNode; height?: number; art?: ReactNode; bottom?: number;
+}) {
   const insets = useSafeAreaInsets();
   return (
-    <LinearGradient colors={[colors.primary, colors.primaryDark]} style={[s.header, { paddingTop: insets.top + 12, minHeight: height }]}>
+    <LinearGradient colors={[colors.primary, colors.primaryDark]} style={[s.header, { paddingTop: insets.top + 12, minHeight: height, paddingBottom: bottom ?? 56 }]}>
+      {art}
       {!!title && <Text style={s.headerTitle}>{title}</Text>}
       {children}
     </LinearGradient>
@@ -70,12 +83,12 @@ export function GradientHeader({ title, children, height }: { title?: string; ch
 
 export function RoundAction({ icon, label, onPress }: { icon: IconName; label: string; onPress: () => void }) {
   return (
-    <Pressable onPress={onPress} style={{ alignItems: 'center', gap: 8, width: 90 }}>
+    <PressScale onPress={onPress} style={{ alignItems: 'center', gap: 8, width: 90 }}>
       <View style={s.roundAction}>
         <Ionicons name={icon} size={22} color="#fff" />
       </View>
-      <Text style={{ color: '#DCE7FF', fontSize: 13 }}>{label}</Text>
-    </Pressable>
+      <Text style={{ color: colors.onHeader, fontSize: 13 }}>{label}</Text>
+    </PressScale>
   );
 }
 

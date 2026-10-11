@@ -2,11 +2,12 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useEffect, useState } from 'react';
 import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { RootStack } from '../../App';
+import { FadeInUp, PopIn } from '../anim';
 import { api } from '../api';
 import { PORTAL_URL } from '../autofill';
 import { rememberChild } from '../launch';
 import { colors } from '../theme';
-import { Button, Card, IconCircle } from '../ui';
+import { Button, Card, IconCircle, KVLogo } from '../ui';
 
 // Browser preview. A web page can't fill another site's form, so the API opens the portal in a
 // real browser window on this PC and fills the details; you only type the captcha and pay.
@@ -43,8 +44,9 @@ export default function PayScreen({ route }: NativeStackScreenProps<RootStack, '
 
   return (
     <ScrollView contentContainerStyle={s.c}>
+      <FadeInUp>
       <Card style={s.top}>
-        <IconCircle name="school" size={64} />
+        <PopIn><KVLogo size={72} /></PopIn>
         <Text style={s.name}>{child.alias_name}</Text>
         <Text style={s.sub}>ID ••••{child.unique_id.slice(-3)}</Text>
         <View style={{ alignSelf: 'stretch', marginTop: 8 }}>
@@ -59,7 +61,9 @@ export default function PayScreen({ route }: NativeStackScreenProps<RootStack, '
           </View>
         )}
       </Card>
+      </FadeInUp>
 
+      <FadeInUp delay={250}>
       <Card style={{ gap: 14 }}>
         <Text style={s.section}>How it works</Text>
         {STEPS.map((x, i) => (
@@ -72,6 +76,7 @@ export default function PayScreen({ route }: NativeStackScreenProps<RootStack, '
           </View>
         ))}
       </Card>
+      </FadeInUp>
     </ScrollView>
   );
 }

@@ -5,11 +5,13 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { RootStack } from '../../App';
 import { Alert } from '../alert';
+import { FadeInUp, PopIn } from '../anim';
+import { CampusScene } from '../art';
 import { requestOtp, verifyOtp } from '../api';
 import { resolveLaunchRoutes } from '../launch';
 import { registerForPush } from '../notifications';
 import { colors } from '../theme';
-import { Button, Card, Field, IconCircle } from '../ui';
+import { Button, Card, Field, KVLogo } from '../ui';
 
 export default function LoginScreen({ navigation }: NativeStackScreenProps<RootStack, 'Login'>) {
   const insets = useSafeAreaInsets();
@@ -38,7 +40,8 @@ export default function LoginScreen({ navigation }: NativeStackScreenProps<RootS
     try {
       await verifyOtp(identifier.trim(), code.trim());
       registerForPush().catch(() => {});
-      const routes = await resolveLaunchRoutes();
+      // Right after logging in, land on Home. Later app opens go straight to the last child's Pay screen.
+      const routes = (await resolveLaunchRoutes()).filter((r) => r.name !== 'Pay');
       navigation.reset({ index: routes.length - 1, routes: routes as any });
     } catch (e) {
       fail(e);
@@ -49,11 +52,13 @@ export default function LoginScreen({ navigation }: NativeStackScreenProps<RootS
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <LinearGradient colors={[colors.primary, colors.primaryDark]} style={{ flex: 1 }}>
+        <CampusScene height={170} />
         <ScrollView contentContainerStyle={[s.c, { paddingTop: insets.top + 40 }]} keyboardShouldPersistTaps="handled">
-          <IconCircle name="school" size={72} tint={colors.primary} bg="#fff" />
-          <Text style={s.h}>KV Fee Helper</Text>
-          <Text style={s.sub}>Pay school fees in one tap.{'\n'}Log in once, stay signed in.</Text>
+          <PopIn><KVLogo size={96} /></PopIn>
+          <FadeInUp delay={200}><Text style={s.h}>KV Fee Helper</Text></FadeInUp>
+          <FadeInUp delay={300}><Text style={s.sub}>Pay school fees in one tap.{'\n'}Log in once, stay signed in.</Text></FadeInUp>
 
+          <FadeInUp delay={450} style={{ width: '100%', alignItems: 'center' }}>
           <Card style={s.card}>
             <Text style={s.title}>{sent ? 'Enter the code' : 'Welcome'}</Text>
             <Text style={s.hint}>{sent ? `We sent a 6-digit code to ${identifier}` : 'Use your mobile number or email'}</Text>
@@ -79,6 +84,7 @@ export default function LoginScreen({ navigation }: NativeStackScreenProps<RootS
               <Button title="Send code" onPress={send} disabled={busy || identifier.trim().length < 5} />
             )}
           </Card>
+          </FadeInUp>
           <Text style={s.note}>Unofficial helper. Not affiliated with KVS or Union Bank of India.</Text>
         </ScrollView>
       </LinearGradient>
@@ -89,12 +95,12 @@ export default function LoginScreen({ navigation }: NativeStackScreenProps<RootS
 const s = StyleSheet.create({
   c: { alignItems: 'center', paddingHorizontal: 20, paddingBottom: 40 },
   h: { color: '#fff', fontSize: 28, fontWeight: '700', marginTop: 16 },
-  sub: { color: '#DCE7FF', textAlign: 'center', marginTop: 8, lineHeight: 20 },
+  sub: { color: colors.onHeader, textAlign: 'center', marginTop: 8, lineHeight: 20 },
   card: { width: '100%', maxWidth: 440, marginTop: 32, gap: 14 },
   title: { fontSize: 20, fontWeight: '700', color: colors.text },
   hint: { color: colors.muted, marginTop: -8 },
   input: { flex: 1, fontSize: 16, color: colors.text, outlineStyle: 'none' } as any,
   links: { flexDirection: 'row', justifyContent: 'space-between' },
   link: { color: colors.primary, fontWeight: '600' },
-  note: { color: '#B9CCFF', fontSize: 12, textAlign: 'center', marginTop: 20 },
+  note: { color: colors.onHeaderDim, fontSize: 12, textAlign: 'center', marginTop: 20 },
 });

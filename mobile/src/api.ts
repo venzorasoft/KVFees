@@ -46,6 +46,7 @@ export const updateName = async (name: string) => (await api.patch<Me>('/users/m
 
 export const listChildren = async () => (await api.get<Child[]>('/children/')).data;
 export const addChild = async (c: Omit<Child, 'id'>) => (await api.post<Child>('/children/', c)).data;
+export const updateChild = async (id: number, c: Omit<Child, 'id'>) => (await api.patch<Child>(`/children/${id}`, c)).data;
 export const deleteChild = (id: number) => api.delete(`/children/${id}`);
 export const listPayments = async () => (await api.get<Payment[]>('/payments/history')).data;
 export const recordPayment = (p: { child_id: number; amount: number; status: string; transaction_id?: string }) =>
